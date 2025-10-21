@@ -1,15 +1,13 @@
 const { productosDisponibles, buscarProductoDisponible } = require('../data/productos');
 
 /**
- * El estado global del carrito (array en memoria).
- * @type {Array<{id: number, nombre: string, precio: number, cantidad: number}>}
+ @type {Array<{id: number, nombre: string, precio: number, cantidad: number}>}
  */
 let carrito = [];
 
 /**
- * Calcula los totales de la venta (subtotal, descuento, IGV, total general)
- * aplicando las reglas de descuento predefinidas.
- * @returns {{subtotal: number, descuento: number, igv: number, totalGeneral: number, baseImponible: number}}
+ * Calcula el total de la venta 
+ @returns {{subtotal: number, descuento: number, igv: number, totalGeneral: number, baseImponible: number}}
  */
 function calcularTotal() {
     const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
@@ -17,17 +15,17 @@ function calcularTotal() {
 
     // Reglas de descuento:
     if (subtotal >= 100) {
-        tasaDescuento = 0.15; // 15%
+        tasaDescuento = 0.15; 
     } else if (subtotal >= 50) {
-        tasaDescuento = 0.10; // 10%
+        tasaDescuento = 0.10; 
     } else if (subtotal >= 20) {
-        tasaDescuento = 0.05; // 5%
+        tasaDescuento = 0.05; 
     }
 
     const descuento = subtotal * tasaDescuento;
     const montoDescontado = subtotal - descuento;
     
-    const tasaIGV = 0.18; // 18%
+    const tasaIGV = 0.18;
     const igv = montoDescontado * tasaIGV;
     
     const totalGeneral = montoDescontado + igv;
@@ -41,13 +39,10 @@ function calcularTotal() {
     };
 }
 
-/**
- * Agrega un producto al carrito o actualiza su cantidad si ya existe.
- * CUMPLE: Permitir agregar productos por id o nombre (la búsqueda es en app.js)
- * CUMPLE: Si el producto ya existe en el carrito, acumular la cantidad.
- * @param {object} productoElegido - El objeto producto a añadir.
- * @param {number} cantidad - La cantidad a añadir.
- * @returns {string} Mensaje de éxito/actualización.
+/** Agrega un producto al carrito o actualiza su cantidad si ya existe.
+  @param {object} productoElegido 
+  @param {number} cantidad 
+  @returns {string} 
  */
 function agregarItemAlCarrito(productoElegido, cantidad) {
     const itemExistente = carrito.find(item => item.id === productoElegido.id);
@@ -68,9 +63,8 @@ function agregarItemAlCarrito(productoElegido, cantidad) {
 
 /**
  * Elimina un producto completamente del carrito.
- * CUMPLE: Permitir eliminar un ítem del carrito por nombre o id.
- * @param {string | number} valor - ID o nombre del producto a eliminar.
- * @returns {{success: boolean, message: string}} Resultado de la operación.
+ @param {string | number} valor 
+ @returns {{success: boolean, message: string}} 
  */
 function eliminarItemDelCarrito(valor) {
     if (carrito.length === 0) {
@@ -91,29 +85,23 @@ function eliminarItemDelCarrito(valor) {
     }
 }
 
-/**
- * Vacía completamente el carrito.
- * CUMPLE: Opción para vaciar el carrito completo desde el menú. (Llamada desde app.js)
- */
+
 function vaciarCarrito() {
     carrito = [];
 }
 
 /**
- * Obtiene el contenido actual del carrito.
- * @returns {object[]} El array del carrito.
+ @returns {object[]} 
  */
 function obtenerCarrito() {
     return carrito;
 }
 
-// ------------------------------------
-// --- FUNCIONES DE REPORTES (Incluidas para mantener la funcionalidad completa) ---
-// ------------------------------------
+//========= Reportes =================
 
-/**
- * Obtiene el TOP 3 de productos más caros del catálogo.
- * @returns {Array<Object>} Lista de los 3 productos más caros.
+
+/** 
+  @returns {Array<Object>} Lista de los 3 productos mas caros.
  */
 function obtenerTopProductosMasCaros() {
     const productosOrdenados = [...productosDisponibles];
@@ -121,9 +109,8 @@ function obtenerTopProductosMasCaros() {
     return productosOrdenados.slice(0, 3);
 }
 
-/**
- * Obtiene los productos más vendidos en la sesión actual.
- * @returns {Array<Object>} Lista de productos ordenados por cantidad vendida (descendente).
+/** Obtiene los productos más vendidos en la sesión
+ @returns {Array<Object>} 
  */
 function obtenerProductosMasVendidos() {
     const productosVendidos = [...carrito];
@@ -131,10 +118,10 @@ function obtenerProductosMasVendidos() {
     return productosVendidos;
 }
 
-/**
- * Obtiene un resumen simple del estado actual del carrito.
- * @returns {{totalItems: number, montoAcumulado: number}}
+/**  Obtiene un resumen simple del estado actual del carrito.
+  @returns {{totalItems: number, montoAcumulado: number}}
  */
+
 function obtenerResumenCarrito() {
     const totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
     const montoAcumulado = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
@@ -150,7 +137,7 @@ module.exports = {
     eliminarItemDelCarrito,
     vaciarCarrito,
     calcularTotal,
-    // Funciones de reportes
+    
     obtenerTopProductosMasCaros,
     obtenerProductosMasVendidos,
     obtenerResumenCarrito

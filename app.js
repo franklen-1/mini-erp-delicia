@@ -5,18 +5,13 @@ const readline = require('readline').createInterface({
 
 const ventasService = require('./services/ventas');
 
-// --- Manejo Seguro de Chalk (Para colores en consola) ---
-
+// integracion de chalk
 let chalk;
 try {
     chalk = require('chalk');
 } catch (e) {
-    // Modo seguro: si chalk no se carga, el programa no falla.
 }
 
-/**
- * Helper para aplicar estilos de color de forma segura.
- */
 const color = (style, text) => {
     if (!chalk) {
         return text;
@@ -34,14 +29,12 @@ const color = (style, text) => {
     return text;
 };
 
-// --- Constantes para Alineación de Columnas ---
-const MAX_NAME_WIDTH = 15; // Ancho máximo para el nombre del producto
-const PRICE_WIDTH = 10;    // Ancho fijo para los precios (S/X.XX)
-const DESC_WIDTH_TICKET = 30; // Ancho máximo para descripción en ticket
-const VALUE_WIDTH_TICKET = 10; // Ancho fijo para valores en ticket
+//  Par Alineación de Columnas
+const MAX_NAME_WIDTH = 15; 
+const PRICE_WIDTH = 10;
+const DESC_WIDTH_TICKET = 30; 
+const VALUE_WIDTH_TICKET = 10;
 
-
-// --- Funciones de Interfaz de Usuario (UI) ---
 
 /**
  * Muestra la lista de productos disponibles.
@@ -49,7 +42,7 @@ const VALUE_WIDTH_TICKET = 10; // Ancho fijo para valores en ticket
  */
 function listarProductos(volverAlMenu = true) {
     const productos = ventasService.obtenerProductosDisponibles();
-    console.log(color('magenta', "\n📃 LISTA DE PRODUCTOS DISPONIBLES:"));
+    console.log(color('magenta', "\n LISTA DE PRODUCTOS DISPONIBLES:"));
     productos.forEach(p => {
         console.log(`ID: ${p.id} - ${p.nombre.padEnd(MAX_NAME_WIDTH, ' ')} (${color('blue', `S/${p.precio.toFixed(2)}`.padStart(PRICE_WIDTH, ' '))})`);
     });
@@ -59,9 +52,8 @@ function listarProductos(volverAlMenu = true) {
     }
 }
 
-/**
- * Flujo de entrada para agregar un producto al carrito.
- */
+// ===========Agregar el producto=============
+
 function agregarProductoFlujo(productoElegido) {
     readline.question(`Ingrese la cantidad de ${productoElegido.nombre}: `, cantidadStr => {
         const cantidad = Number(cantidadStr.trim());
@@ -79,9 +71,8 @@ function agregarProductoFlujo(productoElegido) {
     });
 }
 
-/**
- * Bucle para solicitar productos al usuario.
- */
+//========== Pedir producto =============
+
 function pedirProducto() {
     readline.question("🛒 Producto (Nombre/ID) o 'salir' para finalizar la venta: ", respuesta => {
         const valor = respuesta.trim();
@@ -102,44 +93,40 @@ function pedirProducto() {
     });
 }
 
-/**
- * NUEVA FUNCIÓN (Opción 3 del menú): Permite al usuario buscar y ver detalles de un producto.
- */
+//============ buscar producto ==================
+
 function buscarProductoUI() {
-    readline.question(color('yellow', "🔍 Ingrese el ID o Nombre del producto a buscar: "), valor => {
+    readline.question(color('yellow', " Ingrese el ID o Nombre del producto a buscar: "), valor => {
         const valorBusqueda = valor.trim();
         const producto = ventasService.buscarProductoDisponible(valorBusqueda);
 
         if (producto) {
-            console.log(color('green', "\n✔️ Producto Encontrado:"));
+            console.log(color('green', "\n Producto Encontrado:"));
             console.log(color('cyan', "-----------------------------------"));
             console.log(`ID: ${producto.id}`);
             console.log(`Nombre: ${producto.nombre}`);
             console.log(`Precio Unitario: ${color('blue', `S/${producto.precio.toFixed(2)}`)}`);
             console.log(color('cyan', "-----------------------------------"));
         } else {
-            console.log(color('red', `❌ Producto "${valorBusqueda}" no encontrado en el catálogo.`));
+            console.log(color('red', ` Producto "${valorBusqueda}" no encontrado en el catálogo.`));
         }
         menu();
     });
 }
 
-/**
- * Flujo para eliminar un producto del carrito.
- * Acepta un callback para decidir a dónde volver (menú principal o menú del carrito).
- */
+// ========== Eliminar producto  del carrito ===============
+
 function eliminarItemDelCarritoUI(callback = menu) {
     const carrito = ventasService.obtenerCarrito();
     if (carrito.length === 0) {
-        console.log(color('yellow', "⚠️ El carrito está vacío. No hay nada que eliminar."));
+        console.log(color('yellow', "El carrito está vacío. No hay nada que eliminar."));
         callback();
         return;
     }
     
-    // Se omite la muestra del carrito aquí ya que esta función se llama principalmente desde verCarritoMenu, 
-    // que ya muestra el carrito.
+    // Se omite la muestra del carrito aquí ya que esta función 
     
-    readline.question("🗑️ Ingrese el ID o Nombre del producto a ELIMINAR: ", valor => {
+    readline.question("Ingrese el ID o Nombre del producto a ELIMINAR: ", valor => {
         const resultado = ventasService.eliminarItemDelCarrito(valor);
 
         if (resultado.success) {
@@ -159,7 +146,7 @@ function vaciarCarritoUI(callback = menu) {
     readline.question(color('red', "¿Estás seguro de VACÍAR todo el carrito? (s/n): "), respuesta => {
         if (respuesta.toLowerCase() === 's') {
             ventasService.vaciarCarrito();
-            console.log(color('green', "🗑️ El carrito ha sido vaciado completamente.")); 
+            console.log(color('green', "El carrito ha sido vaciado completamente.")); 
         } else {
             console.log("Acción de vaciado cancelada.");
         }
@@ -167,20 +154,18 @@ function vaciarCarritoUI(callback = menu) {
     });
 }
 
-/**
- * NUEVA FUNCIÓN (Opción 4 del menú): Muestra el carrito y ofrece opciones de gestión (eliminar/vaciar).
- */
+//============ Carrito ==================
 function verCarritoMenu() {
     const carrito = ventasService.obtenerCarrito();
     
-    console.log(color('bold.cyan', "\n--- 🛒 Carrito Actual ---"));
+    console.log(color('bold.cyan', "\n---  Carrito Actual ---"));
     if (carrito.length === 0) {
         console.log("El carrito está vacío.");
         menu();
         return;
     } 
 
-    // Visualizar los productos del carrito con nombre, cantidad y subtotal.
+    // ver producto del carrito con nombre cantidad y subtotal.
     console.log(`- ${"Producto".padEnd(MAX_NAME_WIDTH, ' ')} ( Cant ) | Unitario | Subtotal`);
     console.log(color('cyan', '-'.repeat(MAX_NAME_WIDTH + 34)));
 
@@ -211,40 +196,38 @@ function verCarritoMenu() {
     readline.question(color('yellow', "\nElige una opción: "), function(opcion) {
         switch(opcion.toUpperCase()) {
             case "A":
-                // Llama a eliminar y vuelve a verCarritoMenu
+                // eliminar y vuelve a verCarritoMenu
                 eliminarItemDelCarritoUI(verCarritoMenu); 
                 break;
             case "B":
-                // Llama a vaciar y vuelve a verCarritoMenu
+                //  vaciar y vuelve a verCarritoMenu
                 vaciarCarritoUI(verCarritoMenu); 
                 break;
             case "C":
                 menu();
                 break;
             default:
-                console.log(color('red', "🚫 Opción no válida. Inténtalo de nuevo."));
-                verCarritoMenu(); // Permanece en la vista del carrito
+                console.log(color('red', "Opción no válida. Inténtalo de nuevo."));
+                verCarritoMenu();
         }
     });
 }
 
-/**
- * NUEVA FUNCIÓN (Opción 5 del menú): Muestra el detalle de los cálculos (Subtotal, Desc, IGV, Total) sin finalizar la venta.
- */
+// muestra el contenido de las ventas
+
 function mostrarCalculosSimples() {
     const carrito = ventasService.obtenerCarrito();
     if (carrito.length === 0) {
-        console.log(color('yellow', "⚠️ El carrito está vacío. No hay cálculos que mostrar."));
+        console.log(color('yellow', "El carrito está vacío. No hay cálculos que mostrar."));
         menu();
         return;
     }
     
     const { subtotal, descuento, igv, totalGeneral, baseImponible } = ventasService.calcularTotal();
     
-    console.log(color('bold.blue', "\n--- 💰 Detalle de Cálculos ---"));
+    console.log(color('bold.blue', "\n---  Detalle de Cálculos ---"));
     console.log(color('cyan', "-------------------------------------------"));
     
-    // Helper para alinear las líneas de totales en el ticket.
     const alignTotalLine = (label, value, isBold = false) => {
         const valueDisplay = `S/${value.toFixed(2)}`.padStart(VALUE_WIDTH_TICKET, ' ');
         const labelPadded = label.padEnd(DESC_WIDTH_TICKET + 3, ' ');
@@ -272,20 +255,20 @@ function mostrarCalculosSimples() {
     menu();
 }
 
-/**
- * Muestra el ticket final con todos los detalles de cálculo (Opción 6).
- */
+
+
+// Ticket con los detalles
 function mostrarResumen() {
     const carrito = ventasService.obtenerCarrito();
     if (carrito.length === 0) {
-        console.log(color('yellow', "⚠️ No hay productos en el carrito para generar el ticket."));
+        console.log(color('yellow', " No hay productos en el carrito para generar el ticket."));
         menu();
         return;
     }
     
     const { subtotal, descuento, igv, totalGeneral } = ventasService.calcularTotal();
     
-    console.log(color('bold.blue', "\n📋 TICKET DE COMPRA:"));
+    console.log(color('bold.blue', "\n TICKET DE COMPRA:"));
     console.log(color('cyan', "-------------------------------------------"));
     
     // Items del Ticket
@@ -298,7 +281,7 @@ function mostrarResumen() {
         console.log(`${itemNumber}. ${itemDescription} ${color('blue', itemValue)}`);
     });
 
-    // Totales Alineados (reutilizando el helper local)
+    // Totales Alineados 
     const alignTotalLine = (label, value, isBold = false) => {
         const valueDisplay = `S/${value.toFixed(2)}`.padStart(VALUE_WIDTH_TICKET, ' ');
         const labelPadded = label.padEnd(DESC_WIDTH_TICKET + 3, ' ');
@@ -326,13 +309,11 @@ function mostrarResumen() {
     menu();
 }
 
-// ------------------------------------
-// --- FUNCIONES DE REPORTES (UI) ---
-// ------------------------------------
 
+// ========== reportes  =================
 function mostrarTopCaros() {
     const topCaros = ventasService.obtenerTopProductosMasCaros();
-    console.log(color('bold.magenta', "\n📊 TOP 3 PRODUCTOS MÁS CAROS (Catálogo):"));
+    console.log(color('bold.magenta', "\n TOP 3 PRODUCTOS MÁS CAROS (Catálogo):"));
     if (topCaros.length === 0) {
         console.log("Catálogo vacío.");
         menuReportes();
@@ -350,7 +331,7 @@ function mostrarTopCaros() {
 
 function mostrarMasVendidos() {
     const masVendidos = ventasService.obtenerProductosMasVendidos();
-    console.log(color('bold.magenta', "\n📊 PRODUCTOS MÁS VENDIDOS (Sesión Actual):"));
+    console.log(color('bold.magenta', "\n PRODUCTOS MÁS VENDIDOS (Sesión Actual):"));
     if (masVendidos.length === 0) {
         console.log("No se han registrado ventas en esta sesión.");
         menuReportes();
@@ -369,7 +350,7 @@ function mostrarMasVendidos() {
 
 function mostrarResumenCarritoUI() {
     const { totalItems, montoAcumulado } = ventasService.obtenerResumenCarrito();
-    console.log(color('bold.magenta', "\n📊 RESUMEN DEL CARRITO:"));
+    console.log(color('bold.magenta', "\n RESUMEN DEL CARRITO:"));
     if (totalItems === 0) {
         console.log("El carrito está vacío.");
     } else {
@@ -404,7 +385,7 @@ function menuReportes() {
                 menu();
                 break;
             default:
-                console.log(color('red', "🚫 Opción no válida. Inténtalo de nuevo."));
+                console.log(color('red', "Opción no válida. Inténtalo de nuevo."));
                 menuReportes();
         }
     });
@@ -413,13 +394,13 @@ function menuReportes() {
 //============= MENÚ PRINCIPAL =================
 function menu() {
     console.log(color('bold.cyan', "\n--- SISTEMA ERP MINI-DELICIA ---")); 
-    console.log("1. Registrar venta (Añadir productos)");
+    console.log("1. Registrar venta");
     console.log("2. Listar productos");
     console.log("3. Buscar producto");
     console.log("4. Ver carrito");
     console.log("5. Calcular total");
     console.log("6. Generar ticket y finalizar venta");
-    console.log(color('yellow', "7. REPORTES Y ESTADÍSTICAS"));
+    console.log(color('yellow', "7. Reportes y Estadisticas"));
     console.log("8. Salir");
 
     readline.question(color('cyan', "\nElige una opción: "), function(opcion) {
@@ -434,10 +415,9 @@ function menu() {
             case "3": // Buscar producto
                 buscarProductoUI(); 
                 break;
-            case "4": // Ver carrito (con submenú para eliminar/vaciar)
-                verCarritoMenu();
+            case "4": // Ver carrito 
                 break;
-            case "5": // Calcular total (muestra desglose sin finalizar)
+            case "5": // Calcular total
                 mostrarCalculosSimples();
                 break;
             case "6": // Generar ticket
@@ -447,11 +427,11 @@ function menu() {
                 menuReportes();
                 break;
             case "8":
-                console.log(color('yellow', "👋 Saliendo del sistema..."));
+                console.log(color('yellow', "Saliendo del sistema..."));
                 readline.close();
                 return;
             default:
-                console.log(color('red', "🚫 Opción no válida. Inténtalo de nuevo."));
+                console.log(color('red', "Opción no válida. Inténtalo de nuevo."));
                 menu();
         }
     });
